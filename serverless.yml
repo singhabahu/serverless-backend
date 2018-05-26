@@ -35,7 +35,7 @@ provider:
     USERS_TABLE: ${self:custom.usersTable}
     ROLES_TABLE: ${self:custom.rolesTable}
     ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
-    USER_POOL_ID: 'us-east-1_GhSVNuGOs' #'us-east-1_HetaxzWw5'
+    USER_POOL_ID: 'us-east-1_HetaxzWw5'
 functions:
   get-all-users:
     handler: 'src/api/users.all'
