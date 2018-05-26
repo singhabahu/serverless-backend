@@ -22,6 +22,7 @@
     "webpack": "^3.3.0"
   },
   "dependencies": {
+    "mysql": "^2.15.0",
     "uuid": "^3.2.1"
   }
 }

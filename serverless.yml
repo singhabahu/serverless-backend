@@ -36,6 +36,11 @@ provider:
     ROLES_TABLE: ${self:custom.rolesTable}
     ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
     USER_POOL_ID: 'us-east-1_HetaxzWw5'
+    DATABASE_HOST: 'hostname'
+    DATABASE_USER: 'username'
+    DATABASE_PASSWORD: 'password'
+    DATABASE_NAME: 'databasename'
+
 functions:
   get-all-users:
     handler: 'src/api/users.all'

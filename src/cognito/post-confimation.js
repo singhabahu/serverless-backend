@@ -1,6 +1,7 @@
 import {DynamoDB} from 'aws-sdk';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
 
+'use strict';
 import * as crypto from 'crypto';
 
 let cognitoidentityserviceprovider = new CognitoIdentityServiceProvider();
