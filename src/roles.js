@@ -1,5 +1,6 @@
 'use strict';
 import {DynamoDB} from 'aws-sdk';
+import uuid from 'uuid/v4';
 
 /**
  * Manage actions related to roles
@@ -27,16 +28,27 @@ export const all = (event, context, callback) => {
         dynamo = new DynamoDB.DocumentClient();
     };
 
-    if (event.httpMethod == 'GET') {
-        dynamo.scan({
-            TableName: process.env.USERS_TABLE,
-            AttributesToGet: ['role'],
-        }, (err, res) => {
-            if (err) done(err);
-            res.Items = [...new Set(res.Items.map((user) => user.role))];
-            done(null, res);
-        });
-    } else {
-        done(new Error(`Unsupported method "${event.httpMethod}"`));
-    }
+    const ROLES_TABLE = process.env.ROLES_TABLE;
+    switch (event.httpMethod) {
+        case 'DELETE':
+          dynamo.delete({
+            TableName: ROLES_TABLE, Key: {uuid: JSON.parse(event.body).uuid},
+          }, done);
+          break;
+        case 'GET':
+          dynamo.scan({TableName: ROLES_TABLE}, done);
+          break;
+        case 'POST':
+          let body = JSON.parse(event.body);
+          body.uuid = uuid();
+          const params = {
+            TableName: ROLES_TABLE,
+            Item: body,
+          };
+          dynamo.put(params, done);
+          break;
+        // TODO Create PUT event
+        default:
+          done(new Error(`Unsupported method "${event.httpMethod}"`));
+      }
 };

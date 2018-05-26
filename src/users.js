@@ -34,7 +34,7 @@ export const all = (event, context, callback) => {
   switch (event.httpMethod) {
     case 'DELETE':
       dynamo.delete({
-        TableName: USERS_TABLE, Key: {uuid: JSON.parse(event.body).uuid},
+        TableName: USERS_TABLE, Key: {uuid: event.pathParameters.uuid},
       }, done);
       break;
     case 'GET':

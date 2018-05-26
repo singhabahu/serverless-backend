@@ -6,7 +6,9 @@ plugins:
   - serverless-offline #serverless-offline needs to be last in the list
 
 custom:
-  tableName: 'users-table-${self:provider.stage}'
+  usersTable: 'users-table-${self:provider.stage}'
+  rolesTable: 'roles-table-${self:provider.stage}'
+  organizationsTable: 'organizations-table-${self:provider.stage}'
   dynamodb:
     start:
       migrate: true
@@ -27,9 +29,12 @@ provider:
           - dynamodb:DeleteItem
         Resource:
           - { "Fn::GetAtt": ["UsersDynamoDBTable", "Arn" ] }
+          - { "Fn::GetAtt": ["RolesDynamoDBTable", "Arn" ] }
+          - { "Fn::GetAtt": ["OrganizationsDynamoDBTable", "Arn" ] }
   environment:
-    USERS_TABLE: ${self:custom.tableName}
-
+    USERS_TABLE: ${self:custom.usersTable}
+    ROLES_TABLE: ${self:custom.rolesTable}
+    ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
 functions:
   get-all-users:
     handler: 'src/users.all'
@@ -37,6 +42,10 @@ functions:
       - http:
           path: /users
           method: ANY
+          cors: true
+      - http:
+          path: /users/{uuid}
+          method: DELETE
           cors: true
   get-all-roles:
     handler: 'src/roles.all'
@@ -62,4 +71,34 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
-        TableName: ${self:custom.tableName}
+        TableName: ${self:custom.usersTable}
+    RolesDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: uuid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.rolesTable}
+    OrganizationsDynamoDBTable:
+      Type: 'AWS::DynamoDB::Table'
+      Properties:
+        AttributeDefinitions:
+          -
+            AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          -
+            AttributeName: uuid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        TableName: ${self:custom.organizationsTable}
