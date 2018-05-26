@@ -35,9 +35,10 @@ provider:
     USERS_TABLE: ${self:custom.usersTable}
     ROLES_TABLE: ${self:custom.rolesTable}
     ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
+    USER_POOL_ID: 'us-east-1_GhSVNuGOs' #'us-east-1_HetaxzWw5'
 functions:
   get-all-users:
-    handler: 'src/users.all'
+    handler: 'src/api/users.all'
     events:
       - http:
           path: /users
@@ -48,12 +49,15 @@ functions:
           method: DELETE
           cors: true
   get-all-roles:
-    handler: 'src/roles.all'
+    handler: 'src/api/roles.all'
     events:
       - http:
           path: /roles
           method: ANY
           cors: true
+  execute-post-confirm-task:
+    handler: 'src/cognito/post-confimation.handler'
+  
 
 resources:
   Resources:
