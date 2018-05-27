@@ -1,14 +1,19 @@
+'use strict';
 import {DynamoDB} from 'aws-sdk';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
 
-'use strict';
 import * as crypto from 'crypto';
 
-let cognitoidentityserviceprovider = new CognitoIdentityServiceProvider();
-let dynamoDB = new DynamoDB.DocumentClient();
+const cognitoidentityserviceprovider = new CognitoIdentityServiceProvider();
+const dynamoDB = new DynamoDB.DocumentClient();
 
+/**
+ * Handles the post confirmation actions
+ * @param {*} event
+ * @param {*} context
+ */
 export const handler = (event, context) => {
-    let params = {
+    const params = {
         UserPoolId: process.env.USER_POOL_ID,
         Username: event.request.userAttributes.email,
     };
