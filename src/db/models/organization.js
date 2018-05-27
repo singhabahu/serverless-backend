@@ -2,7 +2,7 @@
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
 
-export const Organization = sequelize.define('organization', {
+export const Organization = sequelize.define('organizations', {
     id: {
         type: Sequelize.INTEGER,
         primaryKey: true,
@@ -39,5 +39,5 @@ export const Organization = sequelize.define('organization', {
         type: Sequelize.DATE,
     },
 }, {
-        tableName: 'organization',
+        tableName: 'organizations',
     });

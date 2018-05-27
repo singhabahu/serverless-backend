@@ -2,7 +2,7 @@
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
 
-export const User = sequelize.define('user', {
+export const User = sequelize.define('users', {
     uuid: {
         type: Sequelize.STRING,
         primaryKey: true,
@@ -26,5 +26,5 @@ export const User = sequelize.define('user', {
         type: Sequelize.DATE,
     },
 }, {
-        tableName: 'user',
+        tableName: 'users',
     });
