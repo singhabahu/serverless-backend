@@ -2,9 +2,9 @@
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
 
-export const Organization = sequelize.define('organizations', {
+export const Organization = sequelize.define('organization', {
     id: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.INTEGER,
         primaryKey: true,
         autoIncrement: true,
     },
@@ -17,27 +17,27 @@ export const Organization = sequelize.define('organizations', {
     email: {
         type: Sequelize.STRING,
     },
-    owner_id: {
+    ownerId: {
         type: Sequelize.STRING,
     },
-    aws_account_status: {
+    awsAccountStatus: {
         type: Sequelize.STRING,
     },
-    aws_client_id: {
+    awsClientId: {
         type: Sequelize.STRING,
     },
-    aws_secret_key: {
+    awsSecretKey: {
         type: Sequelize.STRING,
     },
-    aws_account_key: {
+    awsAccountKey: {
         type: Sequelize.STRING,
     },
     createdAt: {
         type: Sequelize.DATE,
-        field: 'created_at',
     },
     updatedAt: {
         type: Sequelize.DATE,
-        field: 'updated_at',
     },
-  });
+}, {
+        tableName: 'organization',
+    });

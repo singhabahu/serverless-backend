@@ -2,9 +2,9 @@
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
 
-export const User = sequelize.define('users', {
+export const User = sequelize.define('user', {
     uuid: {
-        type: Sequelize.BIGINT,
+        type: Sequelize.STRING,
         primaryKey: true,
     },
     name: {
@@ -13,18 +13,18 @@ export const User = sequelize.define('users', {
     email: {
         type: Sequelize.STRING,
     },
-    organization_id: {
-        type: Sequelize.BIGINT,
+    organizationId: {
+        type: Sequelize.INTEGER,
     },
-    role_id: {
-        type: Sequelize.BIGINT,
+    roleId: {
+        type: Sequelize.INTEGER,
     },
     createdAt: {
         type: Sequelize.DATE,
-        field: 'created_at',
     },
     updatedAt: {
         type: Sequelize.DATE,
-        field: 'updated_at',
     },
-  });
+}, {
+        tableName: 'user',
+    });

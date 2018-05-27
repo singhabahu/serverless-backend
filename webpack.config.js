@@ -18,6 +18,6 @@ module.exports = {
     path: path.join(__dirname, '.webpack'),
     filename: '[name].js',
   },
-  // sequelize issue, waiting for a solution from the library
+  // sequelize issue, waiting for a solution from the library. Issue #7509
   externals: ['pg', 'sqlite3', 'tedious', 'pg-hstore'],
 };
