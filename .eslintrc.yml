@@ -1,2 +1,4 @@
 extends: google
 parser: babel-eslint
+rules: 
+  linebreak-style: 0
