@@ -4,6 +4,9 @@ node_modules
 # Serverless directories
 .serverless
 
+# Webpack directories
+.webpack
+
 * IDE & Editors
 .idea
 .vscode
