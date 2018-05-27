@@ -40,7 +40,8 @@ provider:
     DATABASE_USER: 'root'
     DATABASE_PASSWORD: 'password' #TODO use secret file
     DATABASE_PORT: 3306
-    DATABASE_NAME: 'databasename'
+    DATABASE_NAME: 'ovinway'
+    DATABASE_DIALECT: 'mysql'
 
 functions:
   get-all-users:
