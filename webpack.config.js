@@ -1,6 +1,7 @@
 const path = require('path');
 // eslint-disable-next-line import/no-unresolved
 const webpack = require('serverless-webpack');
+const ContextReplacementPlugin = require('webpack').ContextReplacementPlugin;
 
 module.exports = {
   entry: webpack.lib.entries,
@@ -20,4 +21,9 @@ module.exports = {
   },
   // sequelize issue, waiting for a solution from the library. Issue #7509
   externals: ['pg', 'sqlite3', 'tedious', 'pg-hstore'],
+  plugins: [
+    new ContextReplacementPlugin(
+      /sequelize(\\|\/)/,
+      path.resolve(__dirname, 'src')
+    )],
 };
