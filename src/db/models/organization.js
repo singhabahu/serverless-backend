@@ -17,9 +17,6 @@ export const Organization = sequelize.define('organizations', {
     email: {
         type: Sequelize.STRING,
     },
-    ownerId: {
-        type: Sequelize.STRING,
-    },
     awsAccountStatus: {
         type: Sequelize.STRING,
     },
