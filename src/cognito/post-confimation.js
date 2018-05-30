@@ -4,6 +4,13 @@ import {Organization} from './../db/models/organization';
 import {User} from './../db/models/user';
 
 const cognito = new CognitoIdentityServiceProvider();
+
+/**
+ * Extracts attribute value from a given collection
+ * @param  {Array} collection
+ * @param  {String} field
+ * @return {String} value
+ */
 const getAttributeValue = (collection, field) => {
     const result = collection.UserAttributes.find(
         (element) => element.Name == field
@@ -13,21 +20,71 @@ const getAttributeValue = (collection, field) => {
 };
 
 /**
+ * Creates a new organization record in the database
+ * @param  {Object} collection
+ * @return {*} organization
+ */
+const createOrganization = async (collection) => {
+    return await Organization.create({
+        name: getAttributeValue(
+            collection, 'custom:organizationName'
+        ),
+        phone: getAttributeValue(
+            collection, 'custom:organizationPhone'
+        ),
+        email: getAttributeValue(
+            collection, 'custom:organizationEmail'
+        ),
+        awsAccountStatus: getAttributeValue(
+            collection, 'custom:awsAccountStatus'
+        ),
+        awsClientId: getAttributeValue(
+            collection, 'custom:awsClientId'
+        ),
+        awsSecretKey: getAttributeValue(
+            collection, 'custom:awsSecretKey'
+        ),
+        awsAccountKey: getAttributeValue(
+            collection, 'custom:awsAccountKey'
+        ),
+    });
+};
+
+/**
+ * Creates a new user record in the database
+ * @param  {Object} collection
+ * @return {Promise} user
+ */
+const createUser = async (collection) => {
+    return await User.create({
+        uuid: getAttributeValue(collection, 'sub'),
+        name: getAttributeValue(
+            collection, 'custom:authPersonName'
+        ),
+        email: getAttributeValue(collection, 'email'),
+        organizationId: collection.id,
+        // super_admin as the role of the creator
+        roleId: 1,
+    });
+};
+
+/**
  * Handles the post confirmation actions
  * @param {*} event
  * @param {*} context
+ * @param {*} callback
  */
-export const handler = (event, context) => {
+export const handler = (event, context, callback) => {
     let params = {
         UserPoolId: process.env.USER_POOL_ID,
         Username: event.request.userAttributes.email,
     };
 
-    cognito.adminGetUser(params, (err, user) => {
-        if (err) return context.done(err);
+    cognito.adminGetUser(params, (error, user) => {
+        if (error) return callback(error);
         if (getAttributeValue(user, 'custom:manualConfirmation') == null) {
-            cognito.adminDisableUser(params, (err, result) => {
-                if (err) return context.done(err);
+            cognito.adminDisableUser(params, (error, result) => {
+                if (error) return callback(error);
                 params.UserAttributes = [{
                     // TODO change attribute to more meaningful name
                     Name: 'custom:manualConfirmation',
@@ -35,47 +92,17 @@ export const handler = (event, context) => {
                 }];
                 cognito.adminUpdateUserAttributes(
                     params,
-                    (err, confirmation) => {
-                        if (err) return context.done(err);
-                        Organization.create({
-                            name: getAttributeValue(
-                                user, 'custom:organizationName'
-                            ),
-                            phone: getAttributeValue(
-                                user, 'custom:organizationPhone'
-                            ),
-                            email: getAttributeValue(
-                                user, 'custom:organizationEmail'
-                            ),
-                            awsAccountStatus: getAttributeValue(
-                                user, 'custom:awsAccountStatus'
-                            ),
-                            awsClientId: getAttributeValue(
-                                user, 'custom:awsClientId'
-                            ),
-                            awsSecretKey: getAttributeValue(
-                                user, 'custom:awsSecretKey'
-                            ),
-                            awsAccountKey: getAttributeValue(
-                                user, 'custom:awsAccountKey'
-                            ),
-                        }).then((result) => {
-                            User.create({
-                                uuid: getAttributeValue(user, 'sub'),
-                                name: getAttributeValue(
-                                    user, 'custom:authPersonName'
-                                ),
-                                email: getAttributeValue(user, 'email'),
-                                organizationId: result.id,
-                                // super_admin as the role of the creator
-                                roleId: 1,
-                            }).then((result) => {
-                                return context.done(null, result);
+                    (error, confirmation) => {
+                        if (error) return callback(error);
+                        createOrganization(user).then((result) => {
+                            user.id = result.id;
+                            createUser(user).then((result) => {
+                                return callback(null, result);
                             }).catch((error) => {
-                                return context.done(error);
+                                return callback(error);
                             });
                         }).catch((error) => {
-                            return context.done(error);
+                            return callback(error);
                         });
                     });
             });
