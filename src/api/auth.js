@@ -37,9 +37,7 @@ const generatePolicy = (principalId, effect, resource) => {
  */
 export const authorize = (event, context, callback) => {
     if (event.authorizationToken) {
-        // Remove 'bearer ' from token:
         const token = event.authorizationToken.substring(7);
-        // Make a request to the iss + .well-known/jwks.json URL:
         request(
             {url: `${iss}.well-known/jwks.json`, json: true},
             (error, response, body) => {
@@ -47,7 +45,6 @@ export const authorize = (event, context, callback) => {
                     callback('Unauthorized');
                 }
                 const keys = body;
-                // Based on the JSON of `jwks` create a Pem:
                 const k = keys.keys[0];
                 const jwkArray = {
                     kty: k.kty,
@@ -55,8 +52,6 @@ export const authorize = (event, context, callback) => {
                     e: k.e,
                 };
                 const pem = jwkToPem(jwkArray);
-
-                // Verify the token:
                 jwk.verify(token, pem, {issuer: iss.slice(0, -1)},
                     (error, decoded) => {
                         if (error) {
