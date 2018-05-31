@@ -1,56 +1,54 @@
 'use strict';
-import {DynamoDB} from 'aws-sdk';
-import uuid from 'uuid/v4';
+import {User} from './../db/models/user';
+import * as Sequelize from 'sequelize';
+import Permission from '../util/permission';
 
 /**
- * Manage actions related to users
+ * Get all users related to the same organization
  * @param  {object} event
  * @param  {object} context
  * @param  {object} callback
  */
 export const all = (event, context, callback) => {
-  const IS_OFFLINE = process.env.IS_OFFLINE;
-  const USERS_TABLE = process.env.USERS_TABLE;
-
-  let dynamo;
-  if (IS_OFFLINE === 'true') {
-    dynamo = new DynamoDB.DocumentClient({
-      region: 'localhost',
-      endpoint: 'http://localhost:8000',
-    });
-  } else {
-    dynamo = new DynamoDB.DocumentClient();
-  };
-
-  const done = (err, res) => callback(null, {
-    statusCode: err ? '400' : '200',
-    body: err ? err.message : JSON.stringify(res),
+  const done = (error, res) => callback(null, {
+    statusCode: error ? '403' : '200',
+    body: error ? JSON.stringify(error) : JSON.stringify(res),
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
     },
   });
 
-  switch (event.httpMethod) {
-    case 'DELETE':
-      dynamo.delete({
-        TableName: USERS_TABLE, Key: {uuid: event.pathParameters.uuid},
-      }, done);
-      break;
-    case 'GET':
-      dynamo.scan({TableName: USERS_TABLE}, done);
-      break;
-    case 'POST':
-      let body = JSON.parse(event.body);
-      body.uuid = uuid();
-      const params = {
-        TableName: USERS_TABLE,
-        Item: body,
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasPermission(uuid, {realm: 'user', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return done({
+          message: `User doesn't have enough permission to perform this action`,
+        });
       };
-      dynamo.put(params, done);
-      break;
-    // TODO Create PUT event
-    default:
-      done(new Error(`Unsupported method "${event.httpMethod}"`));
-  }
+
+      User.find({
+        attributes: ['organizationId'],
+        where: {
+          uuid: uuid,
+        },
+      }).then((user) => {
+        User.findAll({
+          where: {
+            organizationId: user.organizationId,
+            uuid: {[Sequelize.Op.ne]: uuid},
+          },
+        }).then((result) => {
+          result = {data: result};
+          return done(null, result);
+        }).catch((error) => {
+          return done(error);
+        });
+      }).catch((error) => {
+        return done(error);
+      });
+    }).catch((error) => {
+      return done(error);
+    });
 };

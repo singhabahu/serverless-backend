@@ -2,41 +2,15 @@ service: serverless-backend
 
 plugins:
   - serverless-webpack
-  - serverless-dynamodb-local
   - serverless-offline #serverless-offline needs to be last in the list
-
-custom:
-  usersTable: 'users-table-${self:provider.stage}'
-  rolesTable: 'roles-table-${self:provider.stage}'
-  organizationsTable: 'organizations-table-${self:provider.stage}'
-  dynamodb:
-    start:
-      migrate: true
 
 provider:
   name: aws
   runtime: nodejs6.10
   stage: dev
   region: us-east-1
-  iamRoleStatements:
-      - Effect: Allow
-        Action:
-          - dynamodb:Query
-          - dynamodb:Scan
-          - dynamodb:GetItem
-          - dynamodb:PutItem
-          - dynamodb:UpdateItem
-          - dynamodb:DeleteItem
-        Resource:
-          - { "Fn::GetAtt": ["UsersDynamoDBTable", "Arn" ] }
-          - { "Fn::GetAtt": ["RolesDynamoDBTable", "Arn" ] }
-          - { "Fn::GetAtt": ["OrganizationsDynamoDBTable", "Arn" ] }
   environment:
-    USERS_TABLE: ${self:custom.usersTable}
-    ROLES_TABLE: ${self:custom.rolesTable}
-    ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
     USER_POOL_ID: 'us-east-1_HetaxzWw5'
-    REGION: 'us-east-1'
     DATABASE_HOST: '52.15.81.107'
     DATABASE_USER: 'root'
     DATABASE_PASSWORD: 'password' #TODO use secret file
@@ -51,71 +25,10 @@ functions:
     events:
       - http:
           path: /users
-          method: ANY
-          authorizer: auth
-          cors: true
-      - http:
-          path: /users/{uuid}
-          method: DELETE
-          cors: true
-  get-all-roles:
-    handler: 'src/api/roles.all'
-    events:
-      - http:
-          path: /roles
-          method: ANY
+          method: GET
           authorizer: auth
           cors: true
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
   auth:
     handler: 'src/api/auth.authorize'
-  
-
-resources:
-  Resources:
-    UsersDynamoDBTable:
-      Type: 'AWS::DynamoDB::Table'
-      Properties:
-        AttributeDefinitions:
-          -
-            AttributeName: uuid
-            AttributeType: S
-        KeySchema:
-          -
-            AttributeName: uuid
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        TableName: ${self:custom.usersTable}
-    RolesDynamoDBTable:
-      Type: 'AWS::DynamoDB::Table'
-      Properties:
-        AttributeDefinitions:
-          -
-            AttributeName: uuid
-            AttributeType: S
-        KeySchema:
-          -
-            AttributeName: uuid
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        TableName: ${self:custom.rolesTable}
-    OrganizationsDynamoDBTable:
-      Type: 'AWS::DynamoDB::Table'
-      Properties:
-        AttributeDefinitions:
-          -
-            AttributeName: uuid
-            AttributeType: S
-        KeySchema:
-          -
-            AttributeName: uuid
-            KeyType: HASH
-        ProvisionedThroughput:
-          ReadCapacityUnits: 1
-          WriteCapacityUnits: 1
-        TableName: ${self:custom.organizationsTable}

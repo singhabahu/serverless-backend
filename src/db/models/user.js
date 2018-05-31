@@ -1,6 +1,7 @@
 'use strict';
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
+import {Role} from './role';
 
 export const User = sequelize.define('users', {
     uuid: {
@@ -28,3 +29,5 @@ export const User = sequelize.define('users', {
 }, {
         tableName: 'users',
     });
+
+User.belongsTo(Role);
