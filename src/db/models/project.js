@@ -14,6 +14,9 @@ export const Project = sequelize.define('projects', {
     ownerId: {
         type: Sequelize.STRING,
     },
+    organizationId: {
+        type: Sequelize.INTEGER,
+    },
     createdAt: {
         type: Sequelize.DATE,
     },
