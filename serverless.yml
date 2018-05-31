@@ -36,12 +36,14 @@ provider:
     ROLES_TABLE: ${self:custom.rolesTable}
     ORGANIZATIONS_TABLE: ${self:custom.organizationsTable}
     USER_POOL_ID: 'us-east-1_HetaxzWw5'
+    REGION: 'us-east-1'
     DATABASE_HOST: '52.15.81.107'
     DATABASE_USER: 'root'
     DATABASE_PASSWORD: 'password' #TODO use secret file
     DATABASE_PORT: 3306
     DATABASE_NAME: 'ovinway'
     DATABASE_DIALECT: 'mysql'
+    ISS: 'https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HetaxzWw5/'
 
 functions:
   get-all-users:
@@ -50,6 +52,7 @@ functions:
       - http:
           path: /users
           method: ANY
+          authorizer: auth
           cors: true
       - http:
           path: /users/{uuid}
@@ -61,9 +64,12 @@ functions:
       - http:
           path: /roles
           method: ANY
+          authorizer: auth
           cors: true
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
+  auth:
+    handler: 'src/api/auth.authorize'
   
 
 resources:

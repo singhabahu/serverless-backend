@@ -22,7 +22,10 @@
     "webpack": "^3.3.0"
   },
   "dependencies": {
+    "jsonwebtoken": "^8.2.1",
+    "jwk-to-pem": "^2.0.0",
     "mysql2": "^1.5.3",
+    "request": "^2.87.0",
     "sequelize": "^4.37.10",
     "uuid": "^3.2.1"
   }
