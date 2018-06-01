@@ -28,6 +28,14 @@ functions:
           method: GET
           authorizer: auth
           cors: true
+  create-project:
+    handler: 'src/api/projects.create'
+    events:
+      - http:
+          path: /projects
+          method: POST
+          authorizer: auth
+          cors: true
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
   auth:
