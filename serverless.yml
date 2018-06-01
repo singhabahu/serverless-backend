@@ -10,6 +10,7 @@ provider:
   stage: dev
   region: us-east-1
   environment:
+    ENV: ${self:provider.stage}
     USER_POOL_ID: 'us-east-1_HetaxzWw5'
     DATABASE_HOST: '52.15.81.107'
     DATABASE_USER: 'root'
