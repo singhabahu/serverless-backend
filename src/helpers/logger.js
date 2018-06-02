@@ -1,5 +1,4 @@
-import Constants from '../config/constants';
-
+import packageJson from '../../package.json';
 /**
  * Logger class
  */
@@ -7,18 +6,17 @@ class Logger {
     /**
      * Reusable log function, can be used to display a detailed logging info.
      * @param {*} message
-     * @param {*} level
+     * @param {*} level - can be either ERROR, INFO or WARNING, Default is ERROR
      */
     static log(message, level = 'ERROR') {
-        let errMsg = {
+        let msg = {
             level: level,
             dateTime: new Date().toISOString(),
-            version: Constants.version,
-            appName: Constants.name,
-            env: Constants.env,
+            version: packageJson.version,
+            env: process.env.STAGE,
             data: message,
         };
-        console.log(JSON.stringify(errMsg));
+        console.log(JSON.stringify(msg));
     }
 };
 
