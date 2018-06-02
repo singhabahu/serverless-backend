@@ -5,7 +5,6 @@ import Permission from '../util/permission';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
 import {done} from '../helpers/response-handler';
 
-
 /**
  * Get all users related to the same organization
  * @param  {object} event
@@ -38,15 +37,15 @@ export const all = (event, context, callback) => {
           result = {data: result};
           return callback(null, done(null, result));
         }).catch((error) => {
-          error.statusCode = 403;
+          error.statusCode = 500;
           return callback(null, done(error));
         });
       }).catch((error) => {
-        error.statusCode = 403;
+        error.statusCode = 500;
         return callback(null, done(error));
       });
     }).catch((error) => {
-      error.statusCode = 403;
+      error.statusCode = 500;
       return callback(null, done(error));
     });
 };
@@ -60,15 +59,6 @@ export const all = (event, context, callback) => {
  */
 export const create = (event, context, callback) => {
   const cognito = new CognitoIdentityServiceProvider();
-
-  const done = (error, res) => callback(null, {
-    statusCode: error ? '403' : '201',
-    body: error ? JSON.stringify(error) : JSON.stringify(res),
-    headers: {
-      'Content-Type': 'application/json',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
 
   const name = JSON.parse(event.body).name;
   const email = JSON.parse(event.body).email;
@@ -88,9 +78,10 @@ export const create = (event, context, callback) => {
   Permission.hasPermission(uuid, {realm: 'user', action: 'create'})
     .then((confirmation) => {
       if (!confirmation) {
-        return done({
+        return callback(null, done({
+          statusCode: 403,
           message: `User doesn't have enough permission to perform this action`,
-        }, null);
+        }));
       };
 
       // If user has permission.
@@ -116,7 +107,8 @@ export const create = (event, context, callback) => {
 
       cognito.adminCreateUser(params, (error, data) => {
         if (error) {
-          return done(error, null);
+          error.statusCode = 400;
+          return callback(null, done(error));
         } else {
           // 2.Query the user table to get the owner's organization id.
           User.find({
@@ -133,17 +125,21 @@ export const create = (event, context, callback) => {
               email: email,
               organizationId: user.organizationId,
               roleId: roleId,
-            }).then((newUser) => {
-              return done(null, {data: newUser});
+            }).then((result) => {
+              result = {data: result, statusCode: 200};
+              return callback(null, done(null, result));
             }).catch((error) => {
-              return done(error, null);
+              error.statusCode = 500;
+              return callback(null, done(error));
             });
           }).catch((error) => {
-            return done(error, null);
+            error.statusCode = 500;
+            return callback(null, done(error));
           });
         }
       });
     }).catch((error) => {
-      return done(error, null);
+      error.statusCode = 500;
+      return callback(null, done(error));
     });
 };
