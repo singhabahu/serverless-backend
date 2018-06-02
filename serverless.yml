@@ -7,6 +7,7 @@ plugins:
 provider:
   name: aws
   runtime: nodejs6.10
+  role: arn:aws:iam::341025277667:role/Lambda_CognitoPowerUser
   stage: dev
   region: us-east-1
   environment:
@@ -26,6 +27,14 @@ functions:
       - http:
           path: /users
           method: GET
+          authorizer: auth
+          cors: true
+  create-user:
+    handler: 'src/api/users.create'
+    events:
+      - http:
+          path: /users
+          method: POST
           authorizer: auth
           cors: true
   execute-post-confirm-task:
