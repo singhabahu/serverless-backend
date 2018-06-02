@@ -102,6 +102,10 @@ export const create = (event, context, callback) => {
             Name: 'custom:manualConfirmation',
             Value: 'confirmed',
           },
+          {
+            Name: 'email_verified',
+            Value: 'true',
+          },
         ],
       };
 
