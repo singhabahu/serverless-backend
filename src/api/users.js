@@ -235,13 +235,13 @@ export const get = (event, context, callback) => {
       }).catch((error) => {
         return callback(null, done({
           statusCode: 500,
-          message: error.message,
+          message: error,
         }));
       });
     }).catch((error) => {
       return callback(null, done({
         statusCode: 500,
-        message: error.message,
+        message: error,
       }));
     });
 };
