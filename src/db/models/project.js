@@ -1,6 +1,7 @@
 'use strict';
 import {sequelize} from './../mysql-connector';
 import * as Sequelize from 'sequelize';
+import {User} from './user';
 
 export const Project = sequelize.define('projects', {
     id: {
@@ -26,3 +27,6 @@ export const Project = sequelize.define('projects', {
 }, {
         tableName: 'projects',
     });
+
+Project.belongsToMany(User, {through: 'users_projects'});
+User.belongsToMany(Project, {through: 'users_projects', foreignKey: 'userId'});

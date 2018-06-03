@@ -11,6 +11,7 @@ provider:
   stage: dev
   region: us-east-1
   environment:
+    STAGE: ${self:provider.stage}
     USER_POOL_ID: 'us-east-1_HetaxzWw5'
     DATABASE_HOST: '52.15.81.107'
     DATABASE_USER: 'root'
@@ -34,6 +35,14 @@ functions:
     events:
       - http:
           path: /users
+          method: POST
+          authorizer: auth
+          cors: true
+  create-project:
+    handler: 'src/api/projects.create'
+    events:
+      - http:
+          path: /projects
           method: POST
           authorizer: auth
           cors: true
