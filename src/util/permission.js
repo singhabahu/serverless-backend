@@ -21,11 +21,15 @@ const hasPermission = (userId, permission) => {
                 attributes: ['type', 'permission'],
             }],
         }).then((result) => {
-            resolve(
-                JSON.parse(
-                    result.role.permission
-                )[permission.realm].includes(permission.action)
-            );
+            if (result == null) {
+                reject('Cannot find role for the given id');
+            } else {
+                resolve(
+                    JSON.parse(
+                        result.role.permission
+                    )[permission.realm].includes(permission.action)
+                );
+            }
         }).catch((error) => {
             reject(error);
         });
