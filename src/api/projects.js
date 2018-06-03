@@ -67,7 +67,7 @@ export const create = (event, context, callback) => {
     }).catch((error) => {
       return callback(null, done({
         statusCode: 500,
-        message: error,
+        message: error.message,
       }));
     });
 };
