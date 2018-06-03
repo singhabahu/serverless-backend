@@ -53,7 +53,7 @@ export const all = (event, context, callback) => {
     }).catch((error) => {
       return callback(null, done({
         statusCode: 500,
-        message: error.message,
+        message: error,
       }));
     });
 };
@@ -157,7 +157,7 @@ export const create = (event, context, callback) => {
       console.log(error);
       return callback(null, done({
         statusCode: 500,
-        message: error.message,
+        message: error,
       }));
     });
 };
