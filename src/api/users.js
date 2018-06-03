@@ -34,24 +34,32 @@ export const all = (event, context, callback) => {
             uuid: {[Sequelize.Op.ne]: uuid},
           },
         }).then((result) => {
-          result = {data: result};
-          return callback(null, done(null, result));
+          return callback(null, done(null, {
+            statusCode: 200,
+            data: result,
+          }));
         }).catch((error) => {
-          error.statusCode = 500;
-          return callback(null, done(error));
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
         });
       }).catch((error) => {
-        error.statusCode = 500;
-        return callback(null, done(error));
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
       });
     }).catch((error) => {
-      error.statusCode = 500;
-      return callback(null, done(error));
+      return callback(null, done({
+        statusCode: 500,
+        message: error.message,
+      }));
     });
 };
 
 /**
- * Create user under organization
+ * Create user under organization using cognito admin API.
  * @param {*} event
  * @param {*} context
  * @param {*} callback
@@ -64,17 +72,18 @@ export const create = (event, context, callback) => {
   const email = JSON.parse(event.body).email;
   const roleId = JSON.parse(event.body).roleId;
 
-  // TODO: email validation if needed.
-  if (name == null || name.trim() == ''
-    || email == null || email.trim() == '' || roleId == null || roleId == '') {
-    return done({
+  if (
+    name == null || name.trim() == '' ||
+    email == null || email.trim() == '' ||
+    roleId == null || roleId == ''
+  ) {
+    return callback(null, done({
+      statusCode: 400,
       message: `Request doesn't contain a valid object`,
-    }, null);
+    }));
   }
 
   const uuid = event.requestContext.authorizer.principalId;
-
-  // Check user permission to create another user.
   Permission.hasPermission(uuid, {realm: 'user', action: 'create'})
     .then((confirmation) => {
       if (!confirmation) {
@@ -84,12 +93,9 @@ export const create = (event, context, callback) => {
         }));
       };
 
-      // If user has permission.
-
-      // 1.Create the cognito user.
       const params = {
-        UserPoolId: process.env.USER_POOL_ID, /* required */
-        Username: email, /* required */
+        UserPoolId: process.env.USER_POOL_ID,
+        Username: email,
         DesiredDeliveryMediums: [
           'EMAIL',
         ],
@@ -108,20 +114,19 @@ export const create = (event, context, callback) => {
           },
         ],
       };
-
       cognito.adminCreateUser(params, (error, data) => {
         if (error) {
-          error.statusCode = 400;
-          return callback(null, done(error));
+          return callback(null, done({
+            statusCode: 400,
+            message: error,
+          }));
         } else {
-          // 2.Query the user table to get the owner's organization id.
           User.find({
             attributes: ['uuid', 'organizationId'],
             where: {
               uuid: uuid,
             },
           }).then((user) => {
-            // 3.Enter all new user's values to the user table.
             User.create({
               uuid: data.User.Attributes
                 .find((element) => element.Name === 'sub').Value,
@@ -130,20 +135,29 @@ export const create = (event, context, callback) => {
               organizationId: user.organizationId,
               roleId: roleId,
             }).then((result) => {
-              result = {data: result, statusCode: 200};
-              return callback(null, done(null, result));
+              return callback(null, done(null, {
+                statusCode: 200,
+                data: result,
+              }));
             }).catch((error) => {
-              error.statusCode = 500;
-              return callback(null, done(error));
+              return callback(null, done({
+                statusCode: 500,
+                message: error,
+              }));
             });
           }).catch((error) => {
-            error.statusCode = 500;
-            return callback(null, done(error));
+            return callback(null, done({
+              statusCode: 500,
+              message: error,
+            }));
           });
         }
       });
     }).catch((error) => {
-      error.statusCode = 500;
-      return callback(null, done(error));
+      console.log(error);
+      return callback(null, done({
+        statusCode: 500,
+        message: error.message,
+      }));
     });
 };
