@@ -30,6 +30,14 @@ functions:
           method: GET
           authorizer: auth
           cors: true
+  get-user-details:
+    handler: 'src/api/users.get'
+    events:
+      - http:
+          path: /users/{uuid}
+          method: GET
+          authorizer: auth
+          cors: true
   create-user:
     handler: 'src/api/users.create'
     events:
