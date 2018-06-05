@@ -38,8 +38,8 @@ functions:
           method: POST
           authorizer: auth
           cors: true
-  add-project-user:
-    handler: 'src/api/projects.addUser'
+  insert-project-user:
+    handler: 'src/api/projects.insert'
     events:
       - http:
           path: /projects/user

@@ -9,7 +9,7 @@ import {done} from '../helpers/response-handler';
  * @param  {object} event
  * @param  {object} context
  * @param  {object} callback
- * @return {function} callback
+ * @return {function} done
  */
 export const create = (event, context, callback) => {
   const name = JSON.parse(event.body).name;
@@ -73,13 +73,13 @@ export const create = (event, context, callback) => {
 };
 
 /**
- * Add user to a given project
+ * Insert user to a given project
  * @param {*} event
  * @param {*} context
  * @param {*} callback
- * @return {function} callback
+ * @return {function} done
  */
-export const addUser = (event, context, callback) => {
+export const insert = (event, context, callback) => {
   const userId = JSON.parse(event.body).userId;
   const projectId = JSON.parse(event.body).projectId;
 
@@ -112,14 +112,15 @@ export const addUser = (event, context, callback) => {
         Project.find({
           where: {
             id: projectId,
+            organizationId: user.organizationId,
           },
         }).then((project) => {
-            if (project.organizationId == user.organizationId) {
+            if (project != null) {
               project.addUser(user).then((result) => {
                 if (result.length == 0) {
                   return callback(null, done({
                     statusCode: 400,
-                    message: `User has already added to this project`,
+                    message: `User has been already added to this project`,
                   }));
                 } else {
                   return callback(null, done(null, {
@@ -136,7 +137,7 @@ export const addUser = (event, context, callback) => {
             } else {
               return callback(null, done({
                 statusCode: 400,
-                message: `User and project not belong to the same organization`,
+                message: `Project not found`,
               }));
             }
         }).catch((error) => {
