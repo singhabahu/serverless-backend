@@ -224,7 +224,7 @@ export const get = (event, context, callback) => {
           user.role.permission = JSON.parse(user.role.permission);
           return callback(null, done({
             statusCode: 200,
-            message: user,
+            data: user,
           }));
         }).catch((error) => {
           return callback(null, done({
