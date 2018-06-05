@@ -41,7 +41,10 @@ export const create = (event, context, callback) => {
           ownerId: uuid,
           organizationId: user.organizationId,
         }).then((project) => {
-          user.addProject(project).then((result) => {
+          user.addProject(project, {
+            through: {
+              permission: `{"projectSpecific":["admin"]}`,
+            }}).then((result) => {
             return callback(null, done(null, {
               statusCode: 200,
               data: result[0][0]}

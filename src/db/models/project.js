@@ -28,5 +28,9 @@ export const Project = sequelize.define('projects', {
         tableName: 'projects',
     });
 
-Project.belongsToMany(User, {through: 'users_projects'});
-User.belongsToMany(Project, {through: 'users_projects', foreignKey: 'userId'});
+const UserProjects = sequelize.define('users_projects', {
+    permission: Sequelize.TEXT('long'),
+});
+
+Project.belongsToMany(User, {through: UserProjects});
+User.belongsToMany(Project, {through: UserProjects, foreignKey: 'userId'});
