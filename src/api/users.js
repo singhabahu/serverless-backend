@@ -1,9 +1,12 @@
 'use strict';
-import {User} from './../db/models/user';
 import * as Sequelize from 'sequelize';
-import Permission from '../util/permission';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
+
+import {User} from '../db/models/user';
+import {Role} from '../db/models/role';
 import {done} from '../helpers/response-handler';
+import {Organization} from '../db/models/organization';
+import Permission from '../util/permission';
 
 /**
  * Get all users related to the same organization
@@ -154,7 +157,88 @@ export const create = (event, context, callback) => {
         }
       });
     }).catch((error) => {
-      console.log(error);
+      return callback(null, done({
+        statusCode: 500,
+        message: error,
+      }));
+    });
+};
+
+/**
+ * Get details of specific user in the same organization
+ * @param {*} event
+ * @param {*} context
+ * @param {*} callback
+ * @return {function} done
+ */
+export const get = (event, context, callback) => {
+  const uuid = event.requestContext.authorizer.principalId;
+  const sub = event.pathParameters.uuid;
+  if (sub == null || sub.trim() == '') {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  Permission.hasPermission(uuid, {realm: 'user', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      User.find({
+        where: {
+          uuid: uuid,
+        },
+        attributes: ['organizationId'],
+      }).then((requester) => {
+        User.find({
+          where: {
+            uuid: sub,
+            organizationId: requester.organizationId,
+          },
+          attributes: {
+            exclude: ['organizationId', 'roleId'],
+          },
+          include: [
+            {
+              model: Role,
+              required: true,
+            },
+            {
+              model: Organization,
+              required: true,
+            },
+          ],
+        }).then((user) => {
+          if (user == null) {
+            return callback(null, done({
+              statusCode: 404,
+              message: `Cannot find user with the given user id`,
+            }));
+          }
+          user.role.permission = JSON.parse(user.role.permission);
+          return callback(null, done({
+            statusCode: 200,
+            data: user,
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    }).catch((error) => {
       return callback(null, done({
         statusCode: 500,
         message: error,
