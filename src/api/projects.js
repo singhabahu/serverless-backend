@@ -67,7 +67,96 @@ export const create = (event, context, callback) => {
     }).catch((error) => {
       return callback(null, done({
         statusCode: 500,
-        message: error.message,
+        message: error,
       }));
     });
 };
+
+/**
+ * Insert user to a given project
+ * @param {*} event
+ * @param {*} context
+ * @param {*} callback
+ * @return {function} done
+ */
+export const insert = (event, context, callback) => {
+  const userId = JSON.parse(event.body).userId;
+  const projectId = JSON.parse(event.body).projectId;
+
+  if (
+    userId == null || userId.trim() == '' ||
+    projectId == null || isNaN(projectId)
+  ) {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasPermission(uuid, {realm: 'project', action: 'insert'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+       User.find({
+        attributes: ['uuid', 'organizationId'],
+        where: {
+          uuid: userId,
+        },
+      }).then((user) => {
+        Project.find({
+          where: {
+            id: projectId,
+            organizationId: user.organizationId,
+          },
+        }).then((project) => {
+            if (project != null) {
+              project.addUser(user).then((result) => {
+                if (result.length == 0) {
+                  return callback(null, done({
+                    statusCode: 400,
+                    message: `User has been already added to this project`,
+                  }));
+                } else {
+                  return callback(null, done(null, {
+                    statusCode: 200,
+                    data: result[0][0],
+                  }));
+                }
+              }).catch((error) => {
+                return callback(null, done({
+                  statusCode: 500,
+                  message: error,
+                }));
+              });
+            } else {
+              return callback(null, done({
+                statusCode: 400,
+                message: `Project not found`,
+              }));
+            }
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    }).catch((error) => {
+      return callback(null, done({
+        statusCode: 500,
+        message: error,
+      }));
+    });
+};
+
