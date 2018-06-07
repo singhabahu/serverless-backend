@@ -28,7 +28,7 @@ export const Project = sequelize.define('projects', {
         tableName: 'projects',
     });
 
-const UserProjects = sequelize.define('users_projects', {
+export const UserProjects = sequelize.define('users_projects', {
     permission: Sequelize.TEXT('long'),
 });
 
