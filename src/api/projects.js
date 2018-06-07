@@ -41,7 +41,11 @@ export const create = (event, context, callback) => {
           ownerId: uuid,
           organizationId: user.organizationId,
         }).then((project) => {
-          user.addProject(project).then((result) => {
+          user.addProject(project, {
+            through: {
+              permission: `{"specific":["admin"]}`,
+            }}).then((result) => {
+            result[0][0].permission = JSON.parse(result[0][0].permission);
             return callback(null, done(null, {
               statusCode: 200,
               data: result[0][0]}
@@ -94,7 +98,10 @@ export const insert = (event, context, callback) => {
   }
 
   const uuid = event.requestContext.authorizer.principalId;
-  Permission.hasPermission(uuid, {realm: 'project', action: 'insert'})
+  Permission.hasProjectPermission({
+    uuid: uuid,
+    projectId: projectId,
+  }, {realm: 'specific', action: 'insert'})
     .then((confirmation) => {
       if (!confirmation) {
         return callback(null, done({
