@@ -5,6 +5,64 @@ import Permission from '../util/permission';
 import {done} from '../helpers/response-handler';
 
 /**
+ * Get all projects related to the user
+ * @param  {object} event
+ * @param  {object} context
+ * @param  {object} callback
+ */
+export const list = (event, context, callback) => {
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasPermission(uuid, {realm: 'project', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      User.find({
+        where: {
+          uuid: uuid,
+        },
+      }).then((user) => {
+        user.getProjects().then((projects) => {
+          const response = [];
+          projects.forEach((project) => {
+            const transform = {
+              id: project.id,
+              name: project.name,
+              permission: JSON.parse(project.users_projects.permission),
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+              assignedAt: project.users_projects.createdAt,
+            };
+            response.push(transform);
+          });
+          return callback(null, done({
+            statusCode: 200,
+            message: (
+              response.length === 0 ?
+              `User is not registered to any project` :
+              response
+            ),
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    });
+};
+
+/**
  * Create project under user's organization
  * @param  {object} event
  * @param  {object} context
