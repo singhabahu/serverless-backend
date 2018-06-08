@@ -46,6 +46,14 @@ functions:
           method: POST
           authorizer: auth
           cors: true
+  list-all-projects:
+    handler: 'src/api/projects.list'
+    events:
+      - http:
+          path: /projects
+          method: GET
+          authorizer: auth
+          cors: true
   insert-project-user:
     handler: 'src/api/projects.insert'
     events:
