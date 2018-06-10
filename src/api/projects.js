@@ -11,6 +11,7 @@ import {done} from '../helpers/response-handler';
  * @param  {object} callback
  */
 export const list = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const uuid = event.requestContext.authorizer.principalId;
   Permission.hasPermission(uuid, {realm: 'project', action: 'view'})
     .then((confirmation) => {
@@ -70,6 +71,7 @@ export const list = (event, context, callback) => {
  * @return {function} done
  */
 export const create = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const name = JSON.parse(event.body).name;
   if (name == null || name.trim() == '') {
     return callback(null, done({
@@ -142,6 +144,7 @@ export const create = (event, context, callback) => {
  * @return {function} done
  */
 export const insert = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const userId = JSON.parse(event.body).userId;
   const projectId = JSON.parse(event.body).projectId;
 

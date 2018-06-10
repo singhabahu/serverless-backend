@@ -1,7 +1,7 @@
 'use strict';
-import { User } from './../db/models/user';
-import { Role } from './../db/models/role';
-import { UserProjects, Project } from './../db/models/project';
+import {User} from './../db/models/user';
+import {Role} from './../db/models/role';
+import {UserProjects} from './../db/models/project';
 /**
  * Permission class
  */

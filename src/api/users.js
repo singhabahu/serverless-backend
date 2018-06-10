@@ -15,6 +15,7 @@ import Permission from '../util/permission';
  * @param  {object} callback
  */
 export const all = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const uuid = event.requestContext.authorizer.principalId;
   Permission.hasPermission(uuid, {realm: 'user', action: 'view'})
     .then((confirmation) => {
@@ -69,6 +70,7 @@ export const all = (event, context, callback) => {
  * @return {function} done
  */
 export const create = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const cognito = new CognitoIdentityServiceProvider();
 
   const name = JSON.parse(event.body).name;
@@ -172,6 +174,7 @@ export const create = (event, context, callback) => {
  * @return {function} done
  */
 export const get = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
   const uuid = event.requestContext.authorizer.principalId;
   const sub = event.pathParameters.uuid;
   if (sub == null || sub.trim() == '') {
