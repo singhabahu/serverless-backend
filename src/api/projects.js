@@ -252,7 +252,7 @@ export const remove = (event, context, callback) => {
   Permission.hasProjectPermission({
     uuid: uuid,
     projectId: projectId,
-  }, {realm: 'specific', action: 'admin'})
+  }, {realm: 'specific', action: 'delete'})
     .then((confirmation) => {
       if (!confirmation) {
         return callback(null, done({
