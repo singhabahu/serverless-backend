@@ -70,6 +70,14 @@ functions:
           method: POST
           authorizer: auth
           cors: true
+  remove-project:
+    handler: 'src/api/projects.remove'
+    events:
+      - http:
+          path: /projects/{id}
+          method: DELETE
+          authorizer: auth
+          cors: true
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
   auth:

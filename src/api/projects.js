@@ -1,6 +1,6 @@
 'use strict';
 import {User} from '../db/models/user';
-import {Project} from '../db/models/project';
+import {Project, UserProjects} from '../db/models/project';
 import Permission from '../util/permission';
 import {done} from '../helpers/response-handler';
 
@@ -44,8 +44,8 @@ export const list = (event, context, callback) => {
             statusCode: 200,
             message: (
               response.length === 0 ?
-              `User is not registered to any project` :
-              response
+                `User is not registered to any project` :
+                response
             ),
           }));
         }).catch((error) => {
@@ -104,11 +104,13 @@ export const create = (event, context, callback) => {
           user.addProject(project, {
             through: {
               permission: `{"specific":["admin"]}`,
-            }}).then((result) => {
+            },
+          }).then((result) => {
             result[0][0].permission = JSON.parse(result[0][0].permission);
             return callback(null, done(null, {
               statusCode: 200,
-              data: result[0][0]}
+              data: result[0][0],
+            }
             ));
           }).catch((error) => {
             return callback(null, done({
@@ -171,7 +173,7 @@ export const insert = (event, context, callback) => {
         }));
       };
 
-       User.find({
+      User.find({
         attributes: ['uuid', 'organizationId'],
         where: {
           uuid: userId,
@@ -183,37 +185,116 @@ export const insert = (event, context, callback) => {
             organizationId: user.organizationId,
           },
         }).then((project) => {
-            if (project != null) {
-              project.addUser(user).then((result) => {
-                if (result.length == 0) {
-                  return callback(null, done({
-                    statusCode: 400,
-                    message: `User has been already added to this project`,
-                  }));
-                } else {
-                  return callback(null, done(null, {
-                    statusCode: 200,
-                    data: result[0][0],
-                  }));
-                }
-              }).catch((error) => {
+          if (project != null) {
+            project.addUser(user).then((result) => {
+              if (result.length == 0) {
                 return callback(null, done({
-                  statusCode: 500,
-                  message: error,
+                  statusCode: 400,
+                  message: `User has been already added to this project`,
                 }));
-              });
-            } else {
+              } else {
+                return callback(null, done(null, {
+                  statusCode: 200,
+                  data: result[0][0],
+                }));
+              }
+            }).catch((error) => {
               return callback(null, done({
-                statusCode: 400,
-                message: `Project not found`,
+                statusCode: 500,
+                message: error,
               }));
-            }
+            });
+          } else {
+            return callback(null, done({
+              statusCode: 400,
+              message: `Project not found`,
+            }));
+          }
         }).catch((error) => {
           return callback(null, done({
             statusCode: 500,
             message: error,
           }));
         });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    }).catch((error) => {
+      return callback(null, done({
+        statusCode: 500,
+        message: error,
+      }));
+    });
+};
+
+/**
+ * Remove the project and user associations for that project
+ * @param {*} event
+ * @param {*} context
+ * @param {*} callback
+ * @return {function} done
+ */
+export const remove = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const projectId = event.pathParameters.id;
+
+  if (projectId == null || isNaN(projectId)) {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasProjectPermission({
+    uuid: uuid,
+    projectId: projectId,
+  }, {realm: 'specific', action: 'delete'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+      Project.destroy({
+        where: {
+          id: projectId,
+          ownerId: uuid,
+        },
+      }).then((projectResult) => {
+        if (projectResult > 0) {
+          UserProjects.destroy({
+            where: {
+              projectId: projectId,
+            },
+          }).then((userProjectResult) => {
+            if (userProjectResult > 0) {
+              return callback(null, done(null, {
+                statusCode: 200,
+                data: userProjectResult,
+              }));
+            } else {
+              return callback(null, done({
+                statusCode: 500,
+                message: `Internal server errror`,
+              }));
+            }
+          }).catch((error) => {
+            return callback(null, done({
+              statusCode: 500,
+              message: error,
+            }));
+          });
+        } else {
+          return callback(null, done({
+            statusCode: 400,
+            message: `Project not found`,
+          }));
+        }
       }).catch((error) => {
         return callback(null, done({
           statusCode: 500,
