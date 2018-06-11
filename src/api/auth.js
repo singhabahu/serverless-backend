@@ -58,7 +58,7 @@ export const authorize = (event, context, callback) => {
                             callback('Unauthorized');
                         } else {
                             callback(null, generatePolicy(decoded.sub,
-                                'Allow', event.methodArn));
+                                'Allow', '*'));
                         }
                     });
             });
