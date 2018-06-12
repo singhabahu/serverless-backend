@@ -78,6 +78,22 @@ functions:
           method: DELETE
           authorizer: auth
           cors: true
+  update-project:
+    handler: 'src/api/projects.update'
+    events:
+      - http:
+          path: /projects/{id}
+          method: PUT
+          authorizer: auth
+          cors: true
+  get-project-details:
+    handler: 'src/api/projects.get'
+    events:
+      - http:
+          path: /projects/{id}
+          method: GET
+          authorizer: auth
+          cors: true
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
   auth:
