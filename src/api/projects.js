@@ -42,7 +42,7 @@ export const list = (event, context, callback) => {
           });
           return callback(null, done({
             statusCode: 200,
-            message: (
+            data: (
               response.length === 0 ?
                 `User is not registered to any project` :
                 response
@@ -309,3 +309,130 @@ export const remove = (event, context, callback) => {
     });
 };
 
+/**
+ * Update project details of a given project
+ * @param  {object} event
+ * @param  {object} context
+ * @param  {object} callback
+ * @return {function} done
+ */
+export const update = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const name = JSON.parse(event.body).name;
+  const projectId = event.pathParameters.id;
+  if (
+    name == null || name.trim() === '' ||
+    projectId == null || isNaN(projectId)
+  ) {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasProjectPermission({
+    uuid: uuid,
+    projectId: projectId,
+  }, {realm: 'specific', action: 'update'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      Project.update(
+        {
+          name: name,
+        }, {
+          where: {
+            id: projectId,
+          },
+        }).then((result) => {
+          return callback(null, done(null, {
+            statusCode: 200,
+            data: `Project updated successfully`,
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+    }).catch((error) => {
+      return callback(null, done({
+        statusCode: 404,
+        message: error,
+      }));
+    });
+};
+
+/**
+ * Get specific project related to the user
+ * @param  {object} event
+ * @param  {object} context
+ * @param  {object} callback
+ * @return {function} done
+ */
+export const get = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const projectId = event.pathParameters.id;
+  if (projectId == null || isNaN(projectId)) {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  const uuid = event.requestContext.authorizer.principalId;
+  Permission.hasPermission(uuid, {realm: 'project', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      User.find({
+        where: {
+          uuid: uuid,
+        },
+      }).then((user) => {
+        user.getProjects({where: {id: projectId}}).then((projects) => {
+          const response = [];
+          projects.forEach((project) => {
+            const transform = {
+              id: project.id,
+              name: project.name,
+              permission: JSON.parse(project.users_projects.permission),
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+              assignedAt: project.users_projects.createdAt,
+            };
+            response.push(transform);
+          });
+          return callback(null, done({
+            statusCode: response.length === 0 ? 404 : 200,
+            data: (
+              response.length === 0 ?
+                `Cannot find the project specified` :
+                response[0]
+            ),
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    });
+};
