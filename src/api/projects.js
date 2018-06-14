@@ -42,11 +42,7 @@ export const list = (event, context, callback) => {
           });
           return callback(null, done({
             statusCode: 200,
-            data: (
-              response.length === 0 ?
-                `User is not registered to any project` :
-                response
-            ),
+            data: response,
           }));
         }).catch((error) => {
           return callback(null, done({
@@ -353,7 +349,7 @@ export const update = (event, context, callback) => {
         }).then((result) => {
           return callback(null, done(null, {
             statusCode: 200,
-            data: `Project updated successfully`,
+            data: {id: projectId, name: name},
           }));
         }).catch((error) => {
           return callback(null, done({

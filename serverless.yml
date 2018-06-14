@@ -8,7 +8,7 @@ provider:
   name: aws
   runtime: nodejs6.10
   role: arn:aws:iam::341025277667:role/Lambda_CognitoPowerUser
-  stage: dev
+  stage: v1
   region: us-east-1
   environment:
     STAGE: ${self:provider.stage}
