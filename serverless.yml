@@ -94,6 +94,14 @@ functions:
           method: GET
           authorizer: auth
           cors: true
+  list-all-roles:
+    handler: 'src/api/roles.list'
+    events:
+      - http:
+          path: /roles
+          method: GET
+          authorizer: auth
+          cors: true 
   execute-post-confirm-task:
     handler: 'src/cognito/post-confimation.handler'
   auth:
