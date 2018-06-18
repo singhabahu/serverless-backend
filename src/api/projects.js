@@ -398,26 +398,40 @@ export const get = (event, context, callback) => {
         },
       }).then((user) => {
         user.getProjects({where: {id: projectId}}).then((projects) => {
-          const response = [];
-          projects.forEach((project) => {
-            const transform = {
+          if (projects.length === 0) {
+            return callback(null, done({
+              statusCode: 404,
+              message: `Cannot find the project specified`,
+            }));
+          }
+          const project = projects.pop();
+          project.getUsers({
+            attributes: ['uuid', 'email', 'name'],
+          }).then((users) => {
+            const response = {
               id: project.id,
               name: project.name,
               permission: JSON.parse(project.users_projects.permission),
+              users: users.map((user) => {
+                user = JSON.parse(JSON.stringify(user));
+                user.permission = JSON.parse(user.users_projects.permission);
+                delete user.users_projects;
+                return user;
+              }),
               createdAt: project.createdAt,
               updatedAt: project.updatedAt,
               assignedAt: project.users_projects.createdAt,
             };
-            response.push(transform);
+            return callback(null, done({
+              statusCode: 200,
+              data: response,
+            }));
+          }).catch((error) => {
+            return callback(null, done({
+              statusCode: 500,
+              message: error,
+            }));
           });
-          return callback(null, done({
-            statusCode: response.length === 0 ? 404 : 200,
-            data: (
-              response.length === 0 ?
-                `Cannot find the project specified` :
-                response[0]
-            ),
-          }));
         }).catch((error) => {
           return callback(null, done({
             statusCode: 500,
