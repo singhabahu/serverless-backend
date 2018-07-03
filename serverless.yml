@@ -30,6 +30,14 @@ functions:
           method: GET
           authorizer: auth
           cors: true
+  get-unassigned-users:
+    handler: 'src/api/projects.unassigned'
+    events:
+      - http:
+          path: /project/{id}/users_not_in
+          method: GET
+          authorizer: auth
+          cors: true
   get-user-details:
     handler: 'src/api/users.get'
     events:
@@ -38,6 +46,14 @@ functions:
           method: GET
           authorizer: auth
           cors: true
+  get-self-user-details:
+    handler: 'src/api/users.self'
+    events:
+      - http:
+          path: /user
+          method: GET
+          authorizer: auth
+          cors: true        
   create-user:
     handler: 'src/api/users.create'
     events:
