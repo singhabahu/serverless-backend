@@ -1,5 +1,4 @@
 'use strict';
-import * as Sequelize from 'sequelize';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
 
 import {User} from '../db/models/user';
@@ -35,7 +34,6 @@ export const all = (event, context, callback) => {
         User.findAll({
           where: {
             organizationId: user.organizationId,
-            uuid: {[Sequelize.Op.ne]: uuid},
           },
         }).then((result) => {
           return callback(null, done(null, {
