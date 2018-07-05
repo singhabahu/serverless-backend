@@ -1,4 +1,6 @@
 'use strict';
+import * as Sequelize from 'sequelize';
+
 import {User} from '../db/models/user';
 import {Project, UserProjects} from '../db/models/project';
 import Permission from '../util/permission';
@@ -444,5 +446,87 @@ export const get = (event, context, callback) => {
           message: error,
         }));
       });
+    });
+};
+
+/**
+ * Get all users not assigned to a specific project.
+ * @param  {object} event
+ * @param  {object} context
+ * @param  {object} callback
+ *  @return {function} done
+ */
+export const unassigned = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const uuid = event.requestContext.authorizer.principalId;
+  const projectId = event.pathParameters.id;
+
+  if (projectId == null || isNaN(projectId)) {
+    return callback(null, done({
+      statusCode: 400,
+      message: `Request doesn't contain a valid object`,
+    }));
+  }
+
+  Permission.hasPermission(uuid, {realm: 'user', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      Project.find({
+        attributes: ['organizationId'],
+        where: {
+          id: projectId,
+        },
+      }).then((result) => {
+        User.findAll({
+          include: [{
+            model: Project,
+            through: {
+              attributes: [],
+            },
+          }],
+          where: {
+            organizationId: result.organizationId,
+          },
+        }).then((users) => {
+            let response = [];
+            users.forEach((user) => {
+                let assigned = false;
+                user.projects.forEach((project) => {
+                    if(project.id == projectId) {
+                        assigned = true;
+                    }
+                })
+                
+                if(!assigned) {
+                    response.push(user);
+                }
+            });
+          return callback(null, done(null, {
+            statusCode: 200,
+            data: response,
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    }).catch((error) => {
+      return callback(null, done({
+        statusCode: 500,
+        message: error,
+      }));
     });
 };

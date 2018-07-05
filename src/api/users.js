@@ -1,5 +1,4 @@
 'use strict';
-import * as Sequelize from 'sequelize';
 import {CognitoIdentityServiceProvider} from 'aws-sdk';
 
 import {User} from '../db/models/user';
@@ -35,7 +34,6 @@ export const all = (event, context, callback) => {
         User.findAll({
           where: {
             organizationId: user.organizationId,
-            uuid: {[Sequelize.Op.ne]: uuid},
           },
         }).then((result) => {
           return callback(null, done(null, {
@@ -248,3 +246,88 @@ export const get = (event, context, callback) => {
       }));
     });
 };
+
+/**
+ * Get details of self user.
+ * @param {*} event
+ * @param {*} context
+ * @param {*} callback
+ */
+export const self = (event, context, callback) => {
+  context.callbackWaitsForEmptyEventLoop = false;
+  const uuid = event.requestContext.authorizer.principalId;
+
+  Permission.hasPermission(uuid, {realm: 'user', action: 'view'})
+    .then((confirmation) => {
+      if (!confirmation) {
+        return callback(null, done({
+          statusCode: 403,
+          message: `User doesn't have enough permission to perform this action`,
+        }));
+      };
+
+      User.find({
+        where: {
+          uuid: uuid,
+        },
+        attributes: {
+          exclude: ['organizationId', 'roleId'],
+        },
+        include: [
+          {
+            model: Role,
+            required: true,
+          },
+          {
+            model: Organization,
+            required: true,
+          },
+        ],
+      }).then((user) => {
+        if (user == null) {
+          return callback(null, done({
+            statusCode: 404,
+            message: `Cannot find user with the given user id`,
+          }));
+        }
+        user.role.permission = JSON.parse(user.role.permission);
+
+        user.getProjects().then((result) => {
+          user = user.toJSON();
+          user.projects = [];
+          result.forEach((project) => {
+            const transform = {
+              id: project.id,
+              name: project.name,
+              permission: JSON.parse(project.users_projects.permission),
+              createdAt: project.createdAt,
+              updatedAt: project.updatedAt,
+              assignedAt: project.users_projects.createdAt,
+            };
+            user.projects.push(transform);
+          });
+
+          return callback(null, done({
+            statusCode: 200,
+            data: user,
+          }));
+        }).catch((error) => {
+          return callback(null, done({
+            statusCode: 500,
+            message: error,
+          }));
+        });
+      }).catch((error) => {
+        return callback(null, done({
+          statusCode: 500,
+          message: error,
+        }));
+      });
+    }).catch((error) => {
+      return callback(null, done({
+        statusCode: 500,
+        message: error,
+      }));
+    });
+};
+
