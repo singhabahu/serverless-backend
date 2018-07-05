@@ -477,10 +477,10 @@ export const unassigned = (event, context, callback) => {
         }));
       };
 
-      User.find({
+      Project.find({
         attributes: ['organizationId'],
         where: {
-          uuid: uuid,
+          id: projectId,
         },
       }).then((result) => {
         User.findAll({
@@ -491,13 +491,25 @@ export const unassigned = (event, context, callback) => {
             },
           }],
           where: {
-            'organizationId': result.organizationId,
-            '$projects.id$': {[Sequelize.Op.ne]: projectId},
+            organizationId: result.organizationId,
           },
         }).then((users) => {
+            let response = [];
+            users.forEach((user) => {
+                let assigned = false;
+                user.projects.forEach((project) => {
+                    if(project.id == projectId) {
+                        assigned = true;
+                    }
+                })
+                
+                if(!assigned) {
+                    response.push(user);
+                }
+            });
           return callback(null, done(null, {
             statusCode: 200,
-            data: users,
+            data: response,
           }));
         }).catch((error) => {
           return callback(null, done({
