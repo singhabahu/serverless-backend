@@ -34,7 +34,7 @@ functions:
     handler: 'src/api/projects.unassigned'
     events:
       - http:
-          path: /project/{id}/users_not_in
+          path: /projects/{id}/users_not_in
           method: GET
           authorizer: auth
           cors: true
